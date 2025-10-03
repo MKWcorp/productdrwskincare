@@ -1,35 +1,37 @@
 // Main export file for DR.W Skincare Components Library
+// Note: This library is currently not used in the main project
+// All components are directly in src/components
 
 // Components
-export { ProductCard } from './components/ProductCard'
-export { ProductList } from './components/ProductList'
-export { CategoryFilter } from './components/CategoryFilter'
-export { SearchBar } from './components/SearchBar'
+// export { ProductCard } from './components/ProductCard'
+// export { ProductList } from './components/ProductList'
+// export { CategoryFilter } from './components/CategoryFilter'
+// export { SearchBar } from './components/SearchBar'
 
 // Hooks
-export { useDRWProducts } from './hooks/useDRWProducts'
-export { useDRWCategories } from './hooks/useDRWCategories'
+// export { useDRWProducts } from './hooks/useDRWProducts'
+// export { useDRWCategories } from './hooks/useDRWCategories'
 
 // Utils
-export { formatPrice, generateWhatsAppUrl, cn } from './utils/helpers'
-export { createSiteConfig, getThemeColors } from './utils/config'
+// export { formatPrice, generateWhatsAppUrl, cn } from './utils/helpers'
+// export { createSiteConfig, getThemeColors } from './utils/config'
 
 // Database
-export { getProductsFromDB, getCategoriesFromDB, transformProduct } from './database/products'
-export { setupPrisma } from './database/client'
+// export { getProductsFromDB, getCategoriesFromDB, transformProduct } from './database/products'
+// export { setupPrisma } from './database/client'
 
 // Types
-export type { 
-  Product, 
-  DatabaseProduct, 
-  SiteConfig, 
-  ProductsFilter,
-  ProductsResponse 
-} from './types'
+// export type { 
+//   Product, 
+//   DatabaseProduct, 
+//   SiteConfig, 
+//   ProductsFilter,
+//   ProductsResponse 
+// } from './types'
 
 // API Routes (for Next.js)
-export { ProductsAPI } from './api/products'
-export { CategoriesAPI } from './api/categories'
+// export { ProductsAPI } from './api/products'
+// export { CategoriesAPI } from './api/categories'
 
 // Constants
 export const DR_SKINCARE_DATABASE_URL = 'postgresql://berkomunitas:berkomunitas688@213.190.4.159:5432/drwskincare'

@@ -61,11 +61,11 @@ export async function GET(
       cara_pakai: product.produk_detail?.cara_pakai,
       netto: product.produk_detail?.netto,
       no_bpom: product.produk_detail?.no_bpom,
-      bahan_aktif: product.produk_bahan_aktif?.map(pba => ({
+      bahan_aktif: product.produk_bahan_aktif?.map((pba: any) => ({
         nama_bahan: pba.bahan_aktif.nama_bahan,
         fungsi: pba.fungsi
       })) || [],
-      foto_produk: product.foto_produk?.map(foto => ({
+      foto_produk: product.foto_produk?.map((foto: any) => ({
         url_foto: foto.url_foto,
         alt_text: foto.alt_text || product.nama_produk,
         urutan: foto.urutan

@@ -18,12 +18,24 @@
 
 "use client"
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react'
 import { notFound } from 'next/navigation'
-import { DatabaseProduct } from '@/types'
-import { formatPrice, cn } from '@/lib/utils'
-import { siteConfig, getThemeColors, getWhatsAppMessage } from '@/lib/config'
+import { getProductImage, getValidImages, isValidImageUrl } from '@/lib/image-utils'
+import { SafeImage } from './SafeImage'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { 
+  faExclamationTriangle, 
+  faCheckCircle, 
+  faFlask, 
+  faLeaf, 
+  faClipboardList, 
+  faAtom,
+  faChartBar,
+  faExclamationCircle
+} from '@fortawesome/free-solid-svg-icons'
+import { DatabaseProduct } from '../types'
+import { cn } from '../lib/utils'
+import { siteConfig, getThemeColors, getWhatsAppMessage, formatPrice } from '../lib/config'
 import { ProductCard } from './ProductCard'
 
 interface ProductDetailProps {
@@ -47,6 +59,11 @@ interface DetailedProduct extends DatabaseProduct {
     urutan: number
   }>
   related_products?: DatabaseProduct[]
+  // Additional properties for display
+  discount?: number
+  stock?: number
+  description?: string
+  category?: string
 }
 
 export function ProductDetail({ slug }: ProductDetailProps) {
@@ -55,6 +72,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [activeTab, setActiveTab] = useState('kegunaan')
   const themeColors = getThemeColors()
 
   useEffect(() => {
@@ -105,14 +123,14 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     
     const message = `Halo, saya tertarik dengan produk ${product.nama_produk} dari ${siteConfig.name}.
     
-Harga: ${formatPrice(product.harga_umum)}
+Harga: ${product.harga_umum ? formatPrice(product.harga_umum) : 'Hubungi Kami'}
 ${product.bpom ? `BPOM: ${product.bpom}` : ''}
 
 Mohon info lebih lanjut untuk pemesanan.
 
 Link produk: ${window.location.href}`
 
-    const url = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`
+    const url = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }
 
@@ -156,7 +174,9 @@ Link produk: ${window.location.href}`
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">❌</div>
+          <div className="text-6xl mb-4 text-red-500">
+            <FontAwesomeIcon icon={faExclamationCircle} />
+          </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Produk Tidak Ditemukan</h1>
           <p className="text-gray-600 mb-6">{error || 'Produk yang Anda cari tidak tersedia'}</p>
           <button
@@ -171,45 +191,35 @@ Link produk: ${window.location.href}`
     )
   }
 
-  const images = product.foto_produk && product.foto_produk.length > 0 
-    ? product.foto_produk.sort((a, b) => a.urutan - b.urutan)
-    : [{ url_foto: product.foto_utama || '', alt_text: product.nama_produk, urutan: 0 }]
+  // Get valid images only, filter out null/invalid URLs
+  const validGalleryImages = getValidImages(product.foto_produk?.map(fp => ({
+    url_foto: fp.url_foto,
+    alt_text: fp.alt_text || product.nama_produk,
+    urutan: fp.urutan || 0
+  })) || [])
+  
+  const mainImageUrl = getProductImage(product)
+  
+  const images = validGalleryImages.length > 0 
+    ? validGalleryImages.sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
+    : mainImageUrl 
+    ? [{ url_foto: mainImageUrl, alt_text: product.nama_produk, urutan: 0 }]
+    : []
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <a href="/" className="hover:text-gray-800 transition-colors">Home</a>
-          <span>→</span>
-          <a href="/products" className="hover:text-gray-800 transition-colors">Produk</a>
-          <span>→</span>
-          {product.category && (
-            <>
-              <a 
-                href={`/products?category=${product.category}`}
-                className="hover:text-gray-800 transition-colors"
-              >
-                {product.category}
-              </a>
-              <span>→</span>
-            </>
-          )}
-          <span className="text-gray-800 font-medium">{product.nama_produk}</span>
-        </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-sm">
-              <Image
-                src={images[selectedImageIndex]?.url_foto || product.foto_utama || ''}
+              <SafeImage
+                src={images[selectedImageIndex]?.url_foto || product.foto_utama}
                 alt={images[selectedImageIndex]?.alt_text || product.nama_produk}
-                fill
+                fill={true}
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
               />
               
               {/* Discount Badge */}
@@ -237,12 +247,13 @@ Link produk: ${window.location.href}`
                         : "border-gray-200 hover:border-gray-300"
                     )}
                   >
-                    <Image
+                    <SafeImage
                       src={image.url_foto}
                       alt={image.alt_text || `${product.nama_produk} ${index + 1}`}
                       width={80}
                       height={80}
                       className="w-full h-full object-cover"
+                      showPlaceholder={false}
                     />
                   </button>
                 ))}
@@ -276,11 +287,11 @@ Link produk: ${window.location.href}`
                   className="text-3xl font-bold"
                   style={{ color: themeColors.primary }}
                 >
-                  {formatPrice(product.price)}
+                  {formatPrice(product.harga_umum)}
                 </span>
-                {product.originalPrice && product.originalPrice > product.price && (
+                {product.harga_director && product.harga_director > product.harga_umum && (
                   <span className="text-xl text-gray-400 line-through">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(product.harga_director)}
                   </span>
                 )}
               </div>
@@ -295,7 +306,10 @@ Link produk: ${window.location.href}`
             {(product.bpom || product.no_bpom) && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-green-600 font-semibold">✓ BPOM:</span>
+                  <span className="text-green-600 font-semibold">
+                    <FontAwesomeIcon icon={faCheckCircle} className="mr-1" />
+                    BPOM:
+                  </span>
                   <span className="text-green-800 font-mono">
                     {product.no_bpom || product.bpom}
                   </span>
@@ -326,10 +340,10 @@ Link produk: ${window.location.href}`
                   : "bg-red-100 text-red-800"
               )}>
                 {product.stock > 10 
-                  ? "✓ Stok Tersedia"
+                  ? <span><FontAwesomeIcon icon={faCheckCircle} className="mr-1 text-green-500" /> Stok Tersedia</span>
                   : product.stock > 0
-                  ? `⚠️ Stok Terbatas (${product.stock})`
-                  : "❌ Stok Habis"
+                  ? <span><FontAwesomeIcon icon={faExclamationTriangle} className="mr-1 text-yellow-500" /> Stok Terbatas ({product.stock})</span>
+                  : <span><FontAwesomeIcon icon={faExclamationCircle} className="mr-1 text-red-500" /> Stok Habis</span>
                 }
               </div>
             )}
@@ -362,125 +376,146 @@ Link produk: ${window.location.href}`
         {/* Product Details Tabs */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-16">
           <div className="border-b">
-            <div className="flex overflow-x-auto">
+            <div className="flex overflow-x-auto scrollbar-hide">
               {[
-                { key: 'kegunaan', label: 'Kegunaan & Manfaat', icon: '🎯' },
-                { key: 'komposisi', label: 'Komposisi', icon: '🧪' },
-                { key: 'cara_pakai', label: 'Cara Pakai', icon: '📋' },
-                { key: 'bahan_aktif', label: 'Bahan Aktif', icon: '⚗️' }
+                { key: 'kegunaan', label: 'Kegunaan & Manfaat', icon: faCheckCircle },
+                { key: 'komposisi', label: 'Komposisi', icon: faFlask },
+                { key: 'cara_pakai', label: 'Cara Pakai', icon: faClipboardList },
+                { key: 'bahan_aktif', label: 'Bahan Aktif', icon: faAtom }
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  className="flex-shrink-0 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent hover:border-gray-300 transition-colors whitespace-nowrap"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex-shrink-0 px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap border-b-2 ${
+                    activeTab === tab.key
+                      ? 'text-blue-600 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-800 border-transparent hover:border-gray-300'
+                  }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
+                  <span className="mr-2">
+                    <FontAwesomeIcon icon={tab.icon} />
+                  </span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="p-8 space-y-8">
-            {/* Kegunaan */}
-            {product.kegunaan && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-2">🎯</span>
+          <div className="p-4 md:p-8">
+            {/* Kegunaan Tab */}
+            {activeTab === 'kegunaan' && product.kegunaan && (
+              <div className="animate-fadeIn">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                  <span className="mr-3 text-blue-500">
+                    <FontAwesomeIcon icon={faCheckCircle} />
+                  </span>
                   Kegunaan & Manfaat
                 </h3>
                 <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-blue-50 rounded-lg p-6">
                     {product.kegunaan}
-                  </p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Komposisi */}
-            {product.komposisi && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-2">🧪</span>
+            {/* Komposisi Tab */}
+            {activeTab === 'komposisi' && product.komposisi && (
+              <div className="animate-fadeIn">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                  <span className="mr-3 text-purple-500">
+                    <FontAwesomeIcon icon={faFlask} />
+                  </span>
                   Komposisi
                 </h3>
                 <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-purple-50 rounded-lg p-6">
                     {product.komposisi}
-                  </p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Cara Pakai */}
-            {product.cara_pakai && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-2">📋</span>
+            {/* Cara Pakai Tab */}
+            {activeTab === 'cara_pakai' && product.cara_pakai && (
+              <div className="animate-fadeIn">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                  <span className="mr-3 text-green-500">
+                    <FontAwesomeIcon icon={faClipboardList} />
+                  </span>
                   Cara Pakai
                 </h3>
                 <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-green-50 rounded-lg p-6">
                     {product.cara_pakai}
-                  </p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Bahan Aktif */}
-            {product.bahan_aktif && product.bahan_aktif.length > 0 && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-2">⚗️</span>
+            {/* Bahan Aktif Tab */}
+            {activeTab === 'bahan_aktif' && (
+              <div className="animate-fadeIn">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                  <span className="mr-3 text-orange-500">
+                    <FontAwesomeIcon icon={faAtom} />
+                  </span>
                   Bahan Aktif
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {product.bahan_aktif.map((bahan, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-800 mb-1">
-                        {typeof bahan === 'string' ? bahan : bahan.nama_bahan}
-                      </h4>
-                      {typeof bahan === 'object' && bahan.fungsi && (
-                        <p className="text-sm text-gray-600">
-                          {bahan.fungsi}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {product.bahan_aktif && product.bahan_aktif.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {product.bahan_aktif.map((bahan, index) => (
+                      <div key={index} className="bg-orange-50 rounded-lg p-6 border border-orange-200">
+                        <h4 className="font-semibold text-gray-800 mb-1">
+                          {typeof bahan === 'string' ? bahan : bahan.nama_bahan}
+                        </h4>
+                        {typeof bahan === 'object' && bahan.fungsi && (
+                          <p className="text-sm text-gray-600">
+                            {bahan.fungsi}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-orange-50 rounded-lg p-6 text-center">
+                    <p className="text-gray-600">Informasi bahan aktif belum tersedia untuk produk ini.</p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Product Specifications */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <span className="mr-2">📊</span>
-                Spesifikasi Produk
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {product.netto && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Netto:</span>
-                    <span className="font-medium text-gray-800">{product.netto}</span>
-                  </div>
-                )}
-                {(product.bpom || product.no_bpom) && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-600">No. BPOM:</span>
-                    <span className="font-medium text-gray-800 font-mono">
-                      {product.no_bpom || product.bpom}
-                    </span>
-                  </div>
-                )}
-                {product.category && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Kategori:</span>
-                    <span className="font-medium text-gray-800">{product.category}</span>
-                  </div>
-                )}
+            {/* Fallback content untuk tab yang tidak memiliki data */}
+            {activeTab === 'kegunaan' && !product.kegunaan && (
+              <div className="animate-fadeIn text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <FontAwesomeIcon icon={faCheckCircle} size="3x" />
+                </div>
+                <p className="text-gray-600">Informasi kegunaan & manfaat belum tersedia untuk produk ini.</p>
               </div>
-            </div>
-          </div>
+            )}
+
+            {activeTab === 'komposisi' && !product.komposisi && (
+              <div className="animate-fadeIn text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <FontAwesomeIcon icon={faFlask} size="3x" />
+                </div>
+                <p className="text-gray-600">Informasi komposisi belum tersedia untuk produk ini.</p>
+              </div>
+            )}
+
+            {activeTab === 'cara_pakai' && !product.cara_pakai && (
+              <div className="animate-fadeIn text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <FontAwesomeIcon icon={faClipboardList} size="3x" />
+                </div>
+                <p className="text-gray-600">Informasi cara pakai belum tersedia untuk produk ini.</p>
+              </div>
+            )}
+
         </div>
+      </div>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

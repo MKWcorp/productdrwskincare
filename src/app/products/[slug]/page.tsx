@@ -118,7 +118,7 @@ export async function generateStaticParams() {
       take: 100 // Limit untuk build performance
     })
 
-    return products.map((product) => ({
+    return products.map((product: any) => ({
       slug: product.slug!
     }))
   } catch (error) {

@@ -3,16 +3,17 @@ import { formatPrice, getWhatsAppMessage } from "@/lib/config"
 
 interface ProductCardProps {
   product: DatabaseProduct
+  className?: string
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, className }: ProductCardProps) {
   const handleWhatsAppClick = () => {
     const whatsappUrl = getWhatsAppMessage(product.nama_produk, product.harga_umum)
     window.open(whatsappUrl, '_blank')
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className || ''}`}>
       {/* Product Image */}
       <div className="aspect-square relative bg-gray-100">
         {product.foto_produk && product.foto_produk.length > 0 ? (

@@ -1,0 +1,17 @@
+<!-- Simple SVG placeholder for products with no image -->
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#F3F4F6"/>
+  
+  <!-- Icon -->
+  <g transform="translate(150, 150)">
+    <path d="M50 25C69.33 25 85 40.67 85 60V75H15V60C15 40.67 30.67 25 50 25Z" fill="#9CA3AF"/>
+    <path d="M10 70H90C93.31 70 96 72.69 96 76V96C96 99.31 93.31 102 90 102H10C6.69 102 4 99.31 4 96V76C4 72.69 6.69 70 10 70Z" fill="#9CA3AF"/>
+    <circle cx="50" cy="86" r="4" fill="#6B7280"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="200" y="250" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="14" font-weight="500">
+    Foto Produk
+  </text>
+</svg>

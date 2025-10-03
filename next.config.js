@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['213.190.4.159'],
+    domains: ['213.190.4.159', 'drwgroup.id'],
   },
   env: {
     DATABASE_URL: process.env.DATABASE_URL,

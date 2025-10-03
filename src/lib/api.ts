@@ -1,5 +1,6 @@
 import { Product, DatabaseProduct } from '@/types'
 import { prisma } from './db'
+import { withRetry, handleDatabaseError, DatabaseConnectionError } from './db-utils'
 
 export interface ProductsResponse {
   success: boolean
@@ -17,6 +18,8 @@ export interface ProductsFilter {
   offset?: number
 }
 
+import { sanitizeImageUrl, getValidImages } from './image-utils'
+
 // Transform database product to structured format
 export function transformProduct(dbProduct: any): DatabaseProduct {
   // Extract categories from produk_kategori relation
@@ -24,6 +27,14 @@ export function transformProduct(dbProduct: any): DatabaseProduct {
     id: pk.kategori.id,
     nama_kategori: pk.kategori.nama_kategori
   })) || []
+
+  // Filter valid images only
+  const validFotoUtama = sanitizeImageUrl(dbProduct.foto_utama)
+  const validFotoProduk = getValidImages(dbProduct.foto_produk?.map((fp: any) => ({
+    url_foto: fp.url_foto,
+    alt_text: fp.alt_text,
+    urutan: fp.urutan || 0
+  })) || [])
 
   return {
     id_produk: dbProduct.id_produk.toString(), // Convert BigInt to string
@@ -34,14 +45,12 @@ export function transformProduct(dbProduct: any): DatabaseProduct {
     harga_supervisor: dbProduct.harga_supervisor,
     harga_consultant: dbProduct.harga_consultant,
     harga_umum: dbProduct.harga_umum,
-    foto_utama: dbProduct.foto_utama,
+    foto_utama: validFotoUtama || undefined,
     deskripsi_singkat: dbProduct.deskripsi_singkat,
     created_at: dbProduct.created_at,
     updated_at: dbProduct.updated_at,
     slug: dbProduct.slug,
-    foto_produk: dbProduct.foto_produk?.map((fp: any) => ({
-      url_foto: fp.url_foto
-    })) || [],
+    foto_produk: validFotoProduk.map(fp => ({ url_foto: fp.url_foto })),
     categories: categories,
     primary_category: categories.length > 0 ? categories[0].nama_kategori : undefined
   }
@@ -74,29 +83,31 @@ export async function getProductsFromDB(filters: ProductsFilter = {}): Promise<P
       }
     }
 
-    const products = await prisma.produk.findMany({
-      where,
-      include: {
-        produk_kategori: {
-          include: {
-            kategori: true
+    const products = await withRetry(async () => {
+      return await prisma.produk.findMany({
+        where,
+        include: {
+          produk_kategori: {
+            include: {
+              kategori: true
+            }
+          },
+          produk_detail: true,
+          produk_bahan_aktif: {
+            include: {
+              bahan_aktif: true
+            }
+          },
+          foto_produk: {
+            orderBy: { urutan: 'asc' },
+            take: 1
           }
         },
-        produk_detail: true,
-        produk_bahan_aktif: {
-          include: {
-            bahan_aktif: true
-          }
-        },
-        foto_produk: {
-          orderBy: { urutan: 'asc' },
-          take: 1
-        }
-      },
-      take: filters.limit,
-      skip: filters.offset || 0,
-      orderBy: { created_at: 'desc' }
-    })
+        take: filters.limit,
+        skip: filters.offset || 0,
+        orderBy: { created_at: 'desc' }
+      })
+    }, 3, 1000)
 
     const transformedProducts = products.map(transformProduct)
 
@@ -108,12 +119,14 @@ export async function getProductsFromDB(filters: ProductsFilter = {}): Promise<P
 
   } catch (error) {
     console.error('Database error:', error)
+    const dbError = handleDatabaseError(error)
+    
     return {
       success: false,
       data: [],
       total: 0,
-      error: 'Failed to fetch products from database',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: dbError.message,
+      message: dbError.code ? `Error ${dbError.code}: ${dbError.message}` : dbError.message
     }
   }
 }
@@ -160,13 +173,18 @@ export async function fetchProducts(filters: ProductsFilter = {}): Promise<Produ
 
 export async function getCategoriesFromDB(): Promise<string[]> {
   try {
-    const categories = await prisma.kategori.findMany({
-      select: { nama_kategori: true },
-      orderBy: { nama_kategori: 'asc' }
-    })
-    return categories.map(cat => cat.nama_kategori)
+    const categories = await withRetry(async () => {
+      return await prisma.kategori.findMany({
+        select: { nama_kategori: true },
+        orderBy: { nama_kategori: 'asc' }
+      })
+    }, 3, 1000)
+    
+    return categories.map((cat: any) => cat.nama_kategori)
   } catch (error) {
     console.error('Error fetching categories from DB:', error)
+    const dbError = handleDatabaseError(error)
+    console.error('Database error details:', dbError)
     return []
   }
 }
@@ -193,6 +211,8 @@ export async function fetchFeaturedProducts(limit: number = 6): Promise<Database
     return response.success ? response.data : []
   } catch (error) {
     console.error('Error fetching featured products:', error)
+    const dbError = handleDatabaseError(error)
+    console.error('Featured products error details:', dbError)
     return []
   }
 }

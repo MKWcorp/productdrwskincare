@@ -6,6 +6,8 @@ import { ProductCard } from "./ProductCard"
 import { cn } from "@/lib/utils"
 import { siteConfig, getThemeColors } from "@/lib/config"
 import { useProducts, useCategories } from "@/hooks/useProducts"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 
 interface ProductListProps {
   className?: string
@@ -109,7 +111,10 @@ export function ProductList({
             Produk {siteConfig.name}
           </h2>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">⚠️ Gagal memuat produk dari database</p>
+            <p className="text-red-800">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="mr-1" />
+              Gagal memuat produk dari database
+            </p>
             <p className="text-red-600 text-sm mt-1">{error}</p>
             <button 
               onClick={() => window.location.reload()}

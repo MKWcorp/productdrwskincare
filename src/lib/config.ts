@@ -31,6 +31,9 @@ export const getWhatsAppMessage = (productName: string, price: number) => {
   return `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(message)}`
 }
 
-export const formatPrice = (price: number) => {
+export const formatPrice = (price: number | null | undefined) => {
+  if (price === null || price === undefined || isNaN(price)) {
+    return 'Hubungi Kami'
+  }
   return `Rp ${price.toLocaleString('id-ID')}`
 }
