@@ -1,17 +1,21 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        primary: '#ec4899', // Pink color for DRW Skincare brand
-        secondary: '#f3f4f6',
+        primary: '#FF6B9D',
+        secondary: '#4ECDC4',
+        accent: '#45B7D1',
+        dark: '#2C3E50',
+        light: '#F8F9FA',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
       },
     },
   },

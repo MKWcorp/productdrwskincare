@@ -1,0 +1,60 @@
+{
+  "name": "@drw-skincare/components",
+  "version": "1.0.0",
+  "description": "DR.W Skincare reusable components and database integration - Created by MKWCorp",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "drw-skincare",
+    "react",
+    "nextjs",
+    "components",
+    "skincare",
+    "ecommerce"
+  ],
+  "author": "MKWcorp",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "next": "^14.0.0",
+    "@prisma/client": "^5.0.0",
+    "tailwindcss": "^3.0.0"
+  },
+  "dependencies": {
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./components": {
+      "import": "./dist/components/index.js"
+    },
+    "./hooks": {
+      "import": "./dist/hooks/index.js"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js"
+    },
+    "./database": {
+      "import": "./dist/database/index.js"
+    }
+  }
+}
