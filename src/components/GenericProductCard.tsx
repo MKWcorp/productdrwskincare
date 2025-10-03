@@ -1,33 +1,39 @@
-import { DatabaseProduct } from "@/types"
-import { ComponentConfig } from "@/types/config"
-import { createWhatsAppMessage, formatPrice } from "@/lib/generic-utils"
+import React from 'react'
+import { DatabaseProduct } from "../types"
+import { useDrwSkincareConfig } from './DrwSkincareProvider'
+import { createWhatsAppMessage, formatPrice } from '../lib/generic-utils'
+import { SafeImage } from './SafeImage'
 
-interface ProductCardProps {
+interface GenericProductCardProps {
   product: DatabaseProduct
-  config: ComponentConfig
   className?: string
   onWhatsAppClick?: (product: DatabaseProduct) => void
+  onProductClick?: (product: DatabaseProduct) => void
   showBPOM?: boolean
   showCategories?: boolean
   customButtonText?: string
+  showButton?: boolean
 }
 
-export function ProductCard({ 
-  product, 
-  config,
-  className,
+export const GenericProductCard: React.FC<GenericProductCardProps> = ({
+  product,
+  className = '',
   onWhatsAppClick,
+  onProductClick,
   showBPOM = true,
   showCategories = true,
-  customButtonText
-}: ProductCardProps) {
+  customButtonText,
+  showButton = true
+}) => {
+  const config = useDrwSkincareConfig()
+
   const handleWhatsAppClick = () => {
     if (onWhatsAppClick) {
       onWhatsAppClick(product)
-    } else {
+    } else if (config.site.features?.whatsappIntegration) {
       const whatsappUrl = createWhatsAppMessage(
-        product.nama_produk, 
-        product.harga_umum, 
+        product.nama_produk,
+        product.harga_umum,
         config.site.whatsappNumber,
         config.site.name
       )
@@ -35,35 +41,42 @@ export function ProductCard({
     }
   }
 
+  const handleProductClick = () => {
+    if (onProductClick) {
+      onProductClick(product)
+    }
+    // Default behavior could be handled by parent component
+  }
+
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className || ''}`}>
+    <div className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className}`}>
       {/* Product Image */}
-      <div className="aspect-square relative bg-gray-100">
-        {product.foto_produk && product.foto_produk.length > 0 ? (
-          <img
-            src={product.foto_produk[0].url_foto}
-            alt={product.nama_produk}
-            className="w-full h-full object-cover"
-          />
-        ) : product.foto_utama ? (
-          <img
-            src={product.foto_utama}
-            alt={product.nama_produk}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <span>No Image</span>
-          </div>
-        )}
+      <div 
+        className="aspect-square relative bg-gray-100 cursor-pointer"
+        onClick={handleProductClick}
+      >
+        <SafeImage
+          src={
+            product.foto_produk && product.foto_produk.length > 0
+              ? product.foto_produk[0].url_foto
+              : product.foto_utama
+          }
+          alt={product.nama_produk}
+          fill={true}
+          className="object-cover"
+          placeholderText="Foto Produk"
+        />
       </div>
 
       {/* Product Info */}
       <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 text-gray-800 line-clamp-2">
+        <h3 
+          className="font-semibold text-lg mb-2 text-gray-800 line-clamp-2 cursor-pointer hover:underline"
+          onClick={handleProductClick}
+        >
           {product.nama_produk}
         </h3>
-        
+
         {product.deskripsi_singkat && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">
             {product.deskripsi_singkat}
@@ -87,7 +100,7 @@ export function ProductCard({
         )}
 
         <div className="flex items-center justify-between mb-3">
-          <span 
+          <span
             className="text-xl font-bold"
             style={{ color: config.site.primaryColor }}
           >
@@ -100,13 +113,15 @@ export function ProductCard({
           )}
         </div>
 
-        {config.site.features?.whatsappIntegration && (
+        {showButton && config.site.features?.whatsappIntegration && (
           <button
             onClick={handleWhatsAppClick}
-            className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors duration-200"
-            style={{ backgroundColor: config.site.primaryColor }}
+            className="w-full text-white py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-90"
+            style={{ 
+              backgroundColor: config.site.primaryColor || '#10B981',
+            }}
           >
-            {customButtonText || 'Pesan via WhatsApp'}
+            {customButtonText || `Pesan via WhatsApp`}
           </button>
         )}
       </div>

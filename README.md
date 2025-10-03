@@ -1,214 +1,338 @@
-# DRW Product Components
+# DR.W Skincare Product Display System
 
-A reusable React component library for DRW Skincare product pages. This library provides ready-to-use components for product listings, detail pages, search/filter functionality, and WhatsApp integration that can be used across multiple websites.
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC)](https://tailwindcss.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748)](https://www.prisma.io/)
 
-## Features
+Sistem tampilan produk e-commerce modern untuk DR.W Skincare dengan komponen React yang dapat dikonfigurasi dan siap untuk ekstraksi sebagai NPM package.
 
-- 📦 **Product Display Components** - Cards, lists, and detail views
-- 🔍 **Search & Filter** - Built-in filtering by category, price range, and search terms
-- 📱 **Responsive Design** - Mobile-first design with TailwindCSS
-- 💬 **WhatsApp Integration** - Direct product inquiry via WhatsApp
-- 🎨 **Customizable Styling** - Easy to theme and customize
-- 📡 **API Integration** - Built-in API client for DRW Skincare backend
-- 🔄 **Loading States** - Elegant loading and error handling
-- 💎 **TypeScript** - Full TypeScript support with comprehensive types
+## 🚀 Features
 
-## Installation
+### ✅ Core System
+- **Modern Product Display**: Homepage dengan grid produk responsive
+- **Category Filtering**: Filter produk berdasarkan kategori
+- **Package Integration**: Sistem paket produk terintegrasi
+- **Dynamic Routing**: Routing otomatis untuk produk
+- **FontAwesome Icons**: Icons profesional menggantikan emoji
+- **Safe Image Handling**: Komponen SafeImage untuk mengatasi null images
+- **Connection Pool Optimization**: Optimasi database dengan retry mechanism
+
+### ✅ Generic Components (NPM Ready)
+- **Configurable Components**: Semua komponen menerima konfigurasi via props
+- **No Hardcoded Values**: Tidak ada lagi `siteName`, `whatsappNumber` yang hardcoded
+- **Multi-API Support**: API endpoints yang dapat dikustomisasi
+- **Theme Customization**: Warna, font, dan styling yang fleksibel
+- **Multi-language Ready**: Support berbagai locale dan currency
+- **TypeScript Full**: Type safety dan IntelliSense lengkap
+
+## 🏗️ Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
+- **Styling**: Tailwind CSS, FontAwesome Icons
+- **Database**: PostgreSQL dengan Prisma ORM
+- **Build System**: Rollup (untuk NPM package)
+- **Development**: ESLint, PostCSS
+
+## 📦 Project Structure
+
+```
+productdrwskincare/
+├── src/
+│   ├── app/                          # Next.js App Router
+│   │   ├── api/                      # API Routes
+│   │   ├── demo/                     # Generic components demo
+│   │   └── [category]/               # Dynamic category pages
+│   ├── components/                   # React Components
+│   │   ├── DrwSkincareProvider.tsx   # Context provider
+│   │   ├── GenericProductCard.tsx    # Generic product card
+│   │   ├── GenericProductDetail.tsx  # Generic product detail
+│   │   ├── GenericProductList.tsx    # Generic product list
+│   │   ├── ProductCard.tsx           # Original product card
+│   │   ├── ProductDetail.tsx         # Original product detail
+│   │   ├── ProductList.tsx           # Original product list
+│   │   └── SafeImage.tsx             # Safe image component
+│   ├── lib/                          # Utilities & NPM Package
+│   │   ├── drw-skincare-components.ts # NPM package exports
+│   │   ├── generic-utils.ts          # Generic utility functions
+│   │   ├── hooks.ts                  # Generic React hooks
+│   │   ├── package.json              # NPM package config
+│   │   └── README.md                 # NPM package documentation
+│   ├── types/                        # TypeScript definitions
+│   │   ├── config.ts                 # Configuration types
+│   │   └── index.ts                  # Database types
+│   └── styles/                       # Global styles
+├── prisma/                           # Database schema
+├── public/                           # Static assets
+├── rollup.config.js                  # Build configuration
+└── README.md                         # This file
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL database
+- npm atau yarn
+
+### Installation
+
+### Environment Variables
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/drw_skincare"
+
+# Site Configuration
+NEXT_PUBLIC_SITE_NAME="DR.W Skincare"
+NEXT_PUBLIC_WHATSAPP_NUMBER="6285852555571"
+NEXT_PUBLIC_API_BASE_URL="https://drwskincarebanyuwangi.com/api"
+```
+
+### Database Setup
 
 ```bash
-npm install @drw/product-components
-# or
-yarn add @drw/product-components
-# or
-pnpm add @drw/product-components
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate dev
+
+# Seed database (optional)
+npx prisma db seed
 ```
 
-## Quick Start
+### Development
 
-### 1. Import Styles
+```bash
+# Start development server
+npm run dev
 
-Make sure to import the component styles in your main CSS file or application entry point:
-
-```css
-@import '@drw/product-components/dist/style.css';
+# Open browser
+open http://localhost:3000
 ```
 
-### 2. Basic Usage
+## 📱 Usage Examples
+
+### Original Components (Legacy)
 
 ```tsx
-import { ProductList, ProductDetail, DrwApiClient } from '@drw/product-components';
+import { ProductList } from '@/components/ProductList'
 
-// Initialize API client
-const apiClient = new DrwApiClient({
-  baseUrl: 'https://your-api-endpoint.com',
-  whatsappNumber: '+1234567890'
-});
-
-// Product List Component
-function ProductsPage() {
-  return (
-    <ProductList 
-      apiClient={apiClient}
-      showSearch={true}
-      showFilters={true}
-      itemsPerPage={12}
-    />
-  );
-}
-
-// Product Detail Component
-function ProductDetailPage({ productId }: { productId: string }) {
-  return (
-    <ProductDetail 
-      apiClient={apiClient}
-      productId={productId}
-      showWhatsAppButton={true}
-    />
-  );
+export default function HomePage() {
+  return <ProductList />
 }
 ```
 
-## Components
-
-### ProductList
-
-Displays a list of products with search and filter functionality.
+### Generic Components (NPM Ready)
 
 ```tsx
-<ProductList 
-  apiClient={apiClient}
-  showSearch={true}
-  showFilters={true}
-  itemsPerPage={12}
-  onProductClick={(product) => console.log('Product clicked:', product)}
-/>
+import { DrwSkincareProvider, GenericProductList } from '@/lib/drw-skincare-components'
+
+const siteConfig = {
+  name: "My Skincare Store",
+  whatsappNumber: "6281234567890",
+  primaryColor: "#ec4899"
+}
+
+const apiConfig = {
+  baseUrl: "https://api.mystore.com",
+  endpoints: { products: "/products" }
+}
+
+export default function GenericDemo() {
+  return (
+    <DrwSkincareProvider siteConfig={siteConfig} apiConfig={apiConfig}>
+      <GenericProductList
+        filters={{ categories: true, search: true }}
+        onProductClick={(product) => router.push(`/products/${product.slug}`)}
+      />
+    </DrwSkincareProvider>
+  )
+}
 ```
 
-**Props:**
-- `apiClient`: DrwApiClient instance
-- `showSearch?`: boolean - Show search input (default: true)
-- `showFilters?`: boolean - Show category and price filters (default: true)
-- `itemsPerPage?`: number - Products per page (default: 12)
-- `onProductClick?`: (product: Product) => void - Product click handler
+## 🔧 Configuration
 
-### ProductDetail
-
-Shows detailed product information with package options and WhatsApp integration.
+### Site Configuration
 
 ```tsx
-<ProductDetail 
-  apiClient={apiClient}
-  productId="product-123"
-  showWhatsAppButton={true}
-  onWhatsAppClick={(product, selectedPackage) => console.log('WhatsApp click')}
-/>
+interface SiteConfig {
+  name: string                    // Brand/store name
+  whatsappNumber: string         // WhatsApp number with country code
+  primaryColor?: string          // Primary theme color
+  backgroundColor?: string       // Background color
+  features?: {
+    whatsappIntegration?: boolean
+    productCategories?: boolean
+    productSearch?: boolean
+    priceDisplay?: boolean
+  }
+}
 ```
 
-**Props:**
-- `apiClient`: DrwApiClient instance
-- `productId`: string - Product ID to display
-- `showWhatsAppButton?`: boolean - Show WhatsApp inquiry button (default: true)
-- `onWhatsAppClick?`: (product: Product, package: ProductPackage) => void - WhatsApp click handler
-
-### ProductCard
-
-Individual product card component for custom layouts.
+### API Configuration
 
 ```tsx
-<ProductCard 
-  product={product}
-  onProductClick={(product) => navigate(`/products/${product.id}`)}
-  onWhatsAppClick={(product, pkg) => openWhatsApp(product, pkg)}
-/>
+interface APIConfig {
+  baseUrl: string               // API base URL
+  version?: string             // API version
+  timeout?: number            // Request timeout
+  headers?: Record<string, string>
+  endpoints?: {
+    products?: string         // Products endpoint
+    categories?: string       // Categories endpoint
+    product?: string         // Single product endpoint
+  }
+}
 ```
 
-**Props:**
-- `product`: Product - Product data
-- `onProductClick?`: (product: Product) => void - Card click handler
-- `onWhatsAppClick?`: (product: Product, package: ProductPackage) => void - WhatsApp button handler
+## 🎨 Components
 
-## API Client
+### GenericProductCard
+- Configurable product card component
+- Custom styling and event handlers
+- WhatsApp integration
+- BPOM and category display
 
-### DrwApiClient
+### GenericProductDetail
+- Product detail page with tabs
+- Image gallery with thumbnails
+- Related products section
+- Custom tab configuration
 
-```tsx
-const apiClient = new DrwApiClient({
-  baseUrl: 'https://api.drwskincare.com',
-  whatsappNumber: '+1234567890',
-  timeout: 10000
-});
+### GenericProductList
+- Product listing with filters
+- Search, category, price range filters
+- Pagination support
+- Custom grid layouts
 
-// Get all products
-const products = await apiClient.getProducts();
+### DrwSkincareProvider
+- React Context provider
+- Global configuration management
+- No prop drilling
 
-// Get single product
-const product = await apiClient.getProduct('product-123');
+## 🔍 Demo
 
-// Get featured products
-const featured = await apiClient.getFeaturedProducts();
+Akses demo komponen generic di:
+```
+http://localhost:3000/demo
 ```
 
-**Configuration:**
-- `baseUrl`: string - API base URL
-- `whatsappNumber`: string - WhatsApp number for inquiries
-- `timeout?`: number - Request timeout in milliseconds (default: 10000)
+Demo menampilkan:
+- ✅ Komponen yang dikonfigurasi via props
+- ✅ API endpoints yang fleksibel
+- ✅ Theme customization
+- ✅ WhatsApp integration
+- ✅ Multi-language support
 
-## Hooks
+## 📦 NPM Package
 
-### useProductList
+Komponen generic siap untuk ekstraksi sebagai NPM package:
 
-```tsx
-const { 
-  products, 
-  loading, 
-  error, 
-  searchTerm, 
-  setSearchTerm,
-  selectedCategory,
-  setSelectedCategory,
-  priceRange,
-  setPriceRange,
-  filteredProducts
-} = useProductList(apiClient);
+```bash
+# Build package
+npm run build
+
+# Publish to NPM
+npm publish
 ```
 
-### useProductDetail
+Package akan tersedia sebagai `@drwskincare/react-components`.
 
-```tsx
-const { 
-  product, 
-  loading, 
-  error, 
-  selectedPackage, 
-  setSelectedPackage 
-} = useProductDetail(apiClient, productId);
+### Installation NPM Package
+
+```bash
+npm install @drwskincare/react-components
 ```
 
-### useFeaturedProducts
+### Usage NPM Package
 
 ```tsx
-const { 
-  featuredProducts, 
-  loading, 
-  error 
-} = useFeaturedProducts(apiClient);
+import { 
+  DrwSkincareProvider, 
+  GenericProductList 
+} from '@drwskincare/react-components'
+
+// See src/lib/README.md for complete documentation
 ```
 
-### useWhatsApp
+## 🐛 Troubleshooting
 
-```tsx
-const { openWhatsApp } = useWhatsApp(whatsappNumber);
+### Common Issues
 
-// Usage
-openWhatsApp(product, selectedPackage);
+1. **Webpack Module Error**: Clear cache dan reinstall dependencies
+```bash
+rm -rf .next node_modules package-lock.json
+npm install
 ```
 
-## Types
+2. **Database Connection**: Pastikan PostgreSQL running dan DATABASE_URL benar
 
-The library exports comprehensive TypeScript types:
+3. **Image Loading**: Gunakan SafeImage component untuk handle null images
 
-```tsx
-import type { 
+4. **TypeScript Errors**: Run `npx prisma generate` untuk update types
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Manual Deployment
+
+```bash
+# Build application
+npm run build
+
+# Start production server
+npm start
+```
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📝 Changelog
+
+### v1.0.0 (Current)
+- ✅ Initial product display system
+- ✅ Category filtering and package integration
+- ✅ FontAwesome icons implementation
+- ✅ Database optimization and error handling
+- ✅ Generic components for NPM package
+- ✅ Complete refactoring from hardcoded to configurable
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- **MKWcorp** - Initial work and refactoring
+- **DR.W Skincare** - Product requirements and testing
+
+## 🔗 Links
+
+- [Live Demo](https://drwskincarebanyuwangi.com)
+- [API Documentation](https://drwskincarebanyuwangi.com/api/docs)
+- [NPM Package](https://www.npmjs.com/package/@drwskincare/react-components)
+- [Issues](https://github.com/MKWcorp/productdrwskincare/issues)
+
+---
+
+⭐ **Star this repo if you find it helpful!** ⭐ 
   Product, 
   ProductPackage, 
   Category, 
